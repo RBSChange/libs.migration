@@ -6,16 +6,20 @@ class c_ChangeMigrationScript
 	static $toRelease = '3.5.2';
 	
 	static $patchs = array(
-		//	"migrateChangeXml",
+		"migrateChangeXml",
 	
-		//	"updateChangeProperties", 
+		"updateChangeProperties", 
 	
-		//	"cleanBuildAndCache", 
+		"cleanBuildAndCache", 
 	
-		//	"buildProject", 
+		"buildProject", 
 
-		//	"forums 0351", // Patch exemple
-
+		"catalog 0361", // Re-synchronize complementary, similar and upsell declinedproducts properties 
+		"catalog 0362", // Reindex compiled products.
+	
+		"order 0357", // Supression de commandes de l'arbre 
+		"order 0358", // Add property applicationPriority
+	
 		"filalizeMigration"
 		);
 		
