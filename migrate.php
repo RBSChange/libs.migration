@@ -513,6 +513,12 @@ class c_ChangeMigrationScript
 		{
 			return false;
 		}
+		
+		if ($this->getProjectProperty('PHP_CLI_PATH') === null)
+		{
+			$this->log('Add constant PHP_CLI_PATH in your change.properties config file' . PHP_EOL, 'error');
+			return false;
+		}
 			
 		if ($this->checkRelease())
 		{
@@ -587,6 +593,11 @@ class c_ChangeMigrationScript
 	
 	protected function checkExecution()
 	{
+		if (!is_readable(WEBEDIT_HOME . '/modules/updater/change.xml'))
+		{
+			return true;
+		}
+		
 		$result = $this->executeTask("updater.migrate", array('--check'));
 		return (strpos($result, 'CHECK SUCCESS') !== false);
 	}
