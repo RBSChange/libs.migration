@@ -514,9 +514,9 @@ class c_ChangeMigrationScript
 			return false;
 		}
 		
-		if ($this->getProjectProperty('PHP_CLI_PATH') === null)
+		if (!isset($_SERVER['REMOTE_ADDR']) && $this->getProjectProperty('PHP_CLI_PATH') === null)
 		{
-			$this->log('Add constant PHP_CLI_PATH in your change.properties config file' . PHP_EOL, 'error');
+			$this->log('Add constant PHP_CLI_PATH in your change.properties config file. (ex: PHP_CLI_PATH=php)' . PHP_EOL, 'error');
 			return false;
 		}
 			
