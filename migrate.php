@@ -12,7 +12,9 @@ class c_ChangeMigrationScript
 	
 		"cleanBuildAndCache", 
 	
-		"buildProject", 
+		"buildProject",
+
+		"fixPatch",
 
 		"catalog 0361", // Re-synchronize complementary, similar and upsell declinedproducts properties 
 		"catalog 0362", // Reindex compiled products.
@@ -78,7 +80,6 @@ class c_ChangeMigrationScript
 	{
 			
 		@unlink(WEBEDIT_HOME . "/.computedChangeComponents.ser");
-
 		$this->rmdir(WEBEDIT_HOME . "/build");
 		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());
 		$this->rmdir(WEBEDIT_HOME . "/cache/www");
@@ -86,7 +87,11 @@ class c_ChangeMigrationScript
 	
 	public function buildProject()
 	{
-		$this->executeTask("init-project");
+		$this->executeTask("update-dependencies");
+		
+		$this->executeTask("compile-config", array('--clear'));
+		
+		$this->executeTask("apply-project-policy");
 		
 		$this->executeTask("init-webapp");
 		
@@ -99,14 +104,28 @@ class c_ChangeMigrationScript
 		$this->executeTask("compile-db-schema");
 	}
 	
+	public function fixPatch()
+	{
+		if (!file_exists(WEBEDIT_HOME . "/modules/marketing/change.xml"))
+		{
+			$patchFilePath = WEBEDIT_HOME . "/modules/order/patch/0358/install.php";
+			if (file_exists($patchFilePath))
+			{
+				unlink($patchFilePath);
+				copy(dirname(__FILE__) . '/order_patch_0358_install.php', $patchFilePath);
+			}
+		}
+	}
+	
 	public function filalizeMigration()
 	{
 		$this->executeTask("clear-all");
 		
+		$this->executeTask("compile-blocks");
+		
 		$this->executeTask("compile-all");
 	}
-	
-	
+
 	//TOOL FUNCTIONS
 
 	/**
