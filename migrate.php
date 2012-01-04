@@ -1,9 +1,9 @@
 <?php
 class c_ChangeMigrationScript
 {
-	static $fromRelease = '3.5.1';
+	static $fromRelease = '3.5.2';
 	
-	static $toRelease = '3.5.2';
+	static $toRelease = '3.5.3';
 	
 	static $patchs = array(
 		"migrateChangeXml",
@@ -16,11 +16,8 @@ class c_ChangeMigrationScript
 
 		"fixPatch",
 
-		"catalog 0361", // Re-synchronize complementary, similar and upsell declinedproducts properties 
-		"catalog 0362", // Reindex compiled products.
-	
-		"order 0357", // Supression de commandes de l'arbre 
-		"order 0358", // Add property applicationPriority
+		"productreturns 0354", // [FIX #47736] Add "accounting" status in return statuses list. Add query folder base on "accounting" status.
+		"twitterconnect 0350", // [FIX #46695] Fix period on periodic planners.
 	
 		"filalizeMigration"
 		);
@@ -106,15 +103,8 @@ class c_ChangeMigrationScript
 	
 	public function fixPatch()
 	{
-		if (!file_exists(WEBEDIT_HOME . "/modules/marketing/change.xml"))
-		{
-			$patchFilePath = WEBEDIT_HOME . "/modules/order/patch/0358/install.php";
-			if (file_exists($patchFilePath))
-			{
-				unlink($patchFilePath);
-				copy(dirname(__FILE__) . '/order_patch_0358_install.php', $patchFilePath);
-			}
-		}
+		
+		
 	}
 	
 	public function filalizeMigration()
@@ -155,7 +145,7 @@ class c_ChangeMigrationScript
 		}
 		else
 		{
-			$this->log("Patch not found ". $module. " ". $number. PHP_EOL, 'warn');
+			$this->log("Patch not found ". $module. " ". $number. PHP_EOL, 'info');
 		}
 	}	
 	
@@ -614,9 +604,8 @@ class c_ChangeMigrationScript
 	{
 		if (!is_readable(WEBEDIT_HOME . '/modules/updater/change.xml'))
 		{
-			return true;
+			return false;
 		}
-		
 		$result = $this->executeTask("updater.migrate", array('--check'));
 		return (strpos($result, 'CHECK SUCCESS') !== false);
 	}
