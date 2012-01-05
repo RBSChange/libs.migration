@@ -81,10 +81,9 @@ class c_ChangeMigrationScript
 	}
 		
 	public function cleanBuildAndCache()
-	{
-			
+	{	
 		@unlink(WEBEDIT_HOME . "/.computedChangeComponents.ser");
-		$this->rmdir(WEBEDIT_HOME . "/build");
+		//$this->rmdir(WEBEDIT_HOME . "/build/" . $this->getProfile(). "/modules");
 		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());
 		$this->rmdir(WEBEDIT_HOME . "/cache/www");
 	}
