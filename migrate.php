@@ -12,14 +12,21 @@ class c_ChangeMigrationScript
 	
 		"cleanBuildAndCache", 
 	
+		"updateDependencies", 
+		
+		"initPojectGenericFiles",
+		
 		"buildProject",
 
-		"fixPatch",
-
 		"productreturns 0354", // [FIX #47736] Add "accounting" status in return statuses list. Add query folder base on "accounting" status.
+		
 		"twitterconnect 0350", // [FIX #46695] Fix period on periodic planners.
 	
-		"filalizeMigration"
+		"clearAll",
+		
+		"compileAll",
+		
+		"filalizeMigration"	
 		);
 		
 	public function migrateChangeXml()
@@ -82,15 +89,22 @@ class c_ChangeMigrationScript
 		$this->rmdir(WEBEDIT_HOME . "/cache/www");
 	}
 	
-	public function buildProject()
+	public function updateDependencies()
 	{
 		$this->executeTask("update-dependencies");
-		
+	}
+	
+	public function initPojectGenericFiles()
+	{
 		$this->executeTask("compile-config", array('--clear'));
 		
 		$this->executeTask("apply-project-policy");
 		
-		$this->executeTask("init-webapp");
+		$this->executeTask("init-webapp");		
+	}
+	
+	public function buildProject()
+	{
 		
 		$this->executeTask("compile-config");
 		
@@ -101,21 +115,20 @@ class c_ChangeMigrationScript
 		$this->executeTask("compile-db-schema");
 	}
 	
-	public function fixPatch()
-	{
-		
-		
-	}
-	
 	public function filalizeMigration()
 	{
-		$this->executeTask("clear-all");
-		
-		$this->executeTask("compile-blocks");
-		
-		$this->executeTask("compile-all");
+		$this->log('Migration completly exectued.');
 	}
 
+	public function clearAll()
+	{
+		$this->executeTask("clear-all");
+	}
+
+	public function compileAll()
+	{
+		$this->executeTask("compile-all");
+	}	
 	//TOOL FUNCTIONS
 
 	/**
