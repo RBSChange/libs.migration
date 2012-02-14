@@ -1,9 +1,9 @@
 <?php
 class c_ChangeMigrationScript
 {
-	static $fromRelease = '3.5.2';
+	static $fromRelease = '3.5.3';
 	
-	static $toRelease = '3.5.3';
+	static $toRelease = '3.5.4';
 	
 	static $patchs = array(
 		"migrateChangeXml",
@@ -18,9 +18,9 @@ class c_ChangeMigrationScript
 		
 		"buildProject",
 
-		"productreturns 0354", // [FIX #47736] Add "accounting" status in return statuses list. Add query folder base on "accounting" status.
+		"useractionlogger 0350", // [UPDATE] Ajout d'une tâche de nettoyage des logs des actions utilisateurs.
 		
-		"twitterconnect 0350", // [FIX #46695] Fix period on periodic planners.
+		"statictext 0350", // [NEW] Add htmlcode document.
 	
 		"clearAll",
 		
