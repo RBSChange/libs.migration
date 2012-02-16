@@ -21,6 +21,8 @@ class c_ChangeMigrationScript
 		"useractionlogger 0350", // [UPDATE] Ajout d'une tâche de nettoyage des logs des actions utilisateurs.
 		
 		"statictext 0350", // [NEW] Add htmlcode document.
+		
+		"mysqlstock 0351", // Split task BackgroundCartCleaningTask.
 	
 		"clearAll",
 		
