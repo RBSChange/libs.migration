@@ -14,6 +14,8 @@ class c_ChangeMigrationScript
 	
 		"updateDependencies", 
 		
+		"updateAutoload", 
+		
 		"initPojectGenericFiles",
 		
 		"buildProject",
@@ -93,6 +95,11 @@ class c_ChangeMigrationScript
 	public function updateDependencies()
 	{
 		$this->executeTask("update-dependencies");
+	}
+	
+	public function updateAutoload()
+	{
+		$this->executeTask("update-autoload", array('--clear'));
 	}
 	
 	public function initPojectGenericFiles()
@@ -279,7 +286,7 @@ class c_ChangeMigrationScript
 	{
 		$cr = curl_init();
 		$options = array(CURLOPT_RETURNTRANSFER => true, 
-			CURLOPT_TIMEOUT => 60, CURLOPT_CONNECTTIMEOUT => 5,
+			CURLOPT_TIMEOUT => 600, CURLOPT_CONNECTTIMEOUT => 5,
 		 	CURLOPT_FOLLOWLOCATION => false, CURLOPT_URL => $url, CURLOPT_POSTFIELDS => null, 
 		 	CURLOPT_POST => false, CURLOPT_SSL_VERIFYPEER =>false);
 		curl_setopt_array( $cr, $options );
