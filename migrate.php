@@ -135,7 +135,7 @@ class c_ChangeMigrationScript
 			}
 		}
 			
-		$this->changeXML->save(WEBEDIT_HOME . '/changeNEW.xml');
+		$this->changeXML->save(WEBEDIT_HOME . '/change.xml');
 	}
 	
 	public function updateChangeProperties()
