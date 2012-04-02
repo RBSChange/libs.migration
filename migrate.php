@@ -195,7 +195,7 @@ class c_ChangeMigrationScript
 	
 	public function filalizeMigration()
 	{
-		$this->log('Migration completly exectued.');
+		$this->log('Migration ' . self::$fromRelease . ' -> '. self::$toRelease . ' Completly Exectued.'. PHP_EOL);
 	}
 
 	public function clearAll()
@@ -540,8 +540,9 @@ class c_ChangeMigrationScript
 	{
 		$this->profile = $this->getProfile();	
 		$this->loadProjectProperties();	
-		foreach (self::$patchs as $patch)
+		foreach (self::$patchs as $index => $patch)
 		{
+			$this->log('Execute Step (' . $index . '): ' . $patch . PHP_EOL);
 			if (strpos($patch, ' '))
 			{
 				list ($module, $number) = explode(' ', $patch);
@@ -549,6 +550,7 @@ class c_ChangeMigrationScript
 			}
 			else
 			{
+				
 				$this->{$patch}();
 			}
 		}
@@ -642,7 +644,7 @@ class c_ChangeMigrationScript
 		$result = $this->getRemoteFile($url, $destFile);
 		if ($result !== true)
 		{
-			$this->log('Unable to download ' . $toName, 'error: ' . implode(', ', $result), 'error');
+			$this->log('Unable to download ' . $toName, 'error: ' . implode(', ', $result) . PHP_EOL, 'error');
 			return false;
 		}
 		return true;
@@ -693,7 +695,7 @@ class c_ChangeMigrationScript
 				$this->log('Invalid xml license file: ' . $destFile . PHP_EOL, 'error');
 			}
 		}
-		$this->log('Unable to check license: ' . implode(', ', $result), 'error');
+		$this->log('Unable to check license: ' . implode(', ', $result). PHP_EOL, 'error');
 		return false;
 	}
 	
@@ -885,11 +887,11 @@ class c_ChangeMigrationScript
 			}
 			else
 			{
-				$this->log('Error on use ZipArchive : ' . $res, 'error');
+				$this->log('Error on use ZipArchive : ' . $res. PHP_EOL, 'error');
 			}
 		}
 		
-		$this->log('USE Soft php unzip', 'warn');
+		$this->log('Use Soft php unzip'. PHP_EOL, 'warn');
 		require_once dirname(__FILE__) .'/Zip.php';
 		migration_Zip::unzip($zipFilePath, $targetDir);
 	}
@@ -901,7 +903,6 @@ if (!defined('WEBEDIT_HOME'))
 	$migration = new c_ChangeMigrationScript();
 	if ($migration->check())
 	{
-		echo 'Checkink OK', PHP_EOL;
 		$migration->main();
 	}
 }
