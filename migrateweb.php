@@ -31,8 +31,9 @@ class c_ChangeMigrationHTTPScript extends c_ChangeMigrationScript
 		return $curldata;
 	}
 	
-	function log($message, $level = 'info')
+	public function log($message, $level = 'info')
 	{
+		$this->logFile($message, $level);
 		echo 'MSGTYPE:', $level, ':', $message;
 	}
 	
@@ -115,7 +116,7 @@ elseif (isset($_GET['cmd']))
 			}
 			else
 			{
-				echo $message;
+				echo 'MSGTYPE:info:', $message;
 			}
 		}
 	}

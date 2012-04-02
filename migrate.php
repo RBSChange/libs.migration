@@ -146,10 +146,10 @@ class c_ChangeMigrationScript
 		$projectPath = WEBEDIT_HOME.'/framework';
 		@unlink($projectPath);
 		
-		$this->log('Link Framework to:' . $localPath);
+		$this->log('Link Framework to:' . $localPath. PHP_EOL);
 		symlink($localPath, $projectPath);
 		
-		$this->log('Update Remote repository to:' . self::REMOTE_REPOSITORY);
+		$this->log('Update Remote repository to:' . self::REMOTE_REPOSITORY. PHP_EOL);
 		$this->updateProjectProperties('REMOTE_REPOSITORIES', self::REMOTE_REPOSITORY);
 		$this->saveProjectProperties();
 	}
@@ -707,8 +707,27 @@ class c_ChangeMigrationScript
 		return (strpos($result, 'CHECK SUCCESS') !== false);
 	}
 	
+	/**
+	 * @var string
+	 */
+	private $logFilePath;
+	
+	protected function logFile($message, $level)
+	{
+		if ($this->logFilePath === null)
+		{
+			$this->logFilePath = WEBEDIT_HOME . '/log/updater/updater.log';
+			if (!is_dir(dirname($this->logFilePath)))
+			{
+				mkdir(dirname($this->logFilePath), 0777, true);
+			}
+		}
+		error_log(date('Y-m-d H:i:s'). ' - ' . strtoupper($level) . ' - '. $message, 3, $this->logFilePath);
+	}
+	
 	public function log($message, $level = "info")
 	{
+		$this->logFile($message, $level);
 		if ($level === 'warn' || $level === 'error')
 		{
 			echo strtoupper($level) , ': ', $message;
@@ -859,7 +878,7 @@ class c_ChangeMigrationScript
 			$res = $zipArch->open($zipFilePath);
 			if ($res === TRUE) 
 			{
-				$this->log('USE ZipArchive for unzip: '. $zipFilePath . PHP_EOL);
+				$this->log('Use ZipArchive for unzip: '. $zipFilePath . PHP_EOL);
 				$zipArch->extractTo($targetDir);
 				$zipArch->close();
 				return;
@@ -883,6 +902,6 @@ if (!defined('WEBEDIT_HOME'))
 	if ($migration->check())
 	{
 		echo 'Checkink OK', PHP_EOL;
-		//$migration->main();
+		$migration->main();
 	}
 }
