@@ -33,7 +33,6 @@ class c_ChangeMigrationHTTPScript extends c_ChangeMigrationScript
 	
 	public function log($message, $level = 'info')
 	{
-		$this->logFile($message, $level);
 		echo 'MSGTYPE:', $level, ':', $message;
 	}
 	
@@ -64,14 +63,18 @@ class c_ChangeMigrationHTTPScript extends c_ChangeMigrationScript
 				$lines[] = array('info', $line);
 			}
 		}
+		foreach ($lines as $l)
+		{
+			$this->logFile($l[1] . PHP_EOL, $l[0]);
+		}
 		return $lines;
 	}
 }
+clearstatcache();
 
 if (isset($_GET['execStep']))
 {
 	header('Content-Type: application/json; charset=utf-8');
-	
 	ob_start();
 	$migration = new c_ChangeMigrationHTTPScript();
 	$migration->executeStep($_GET['execStep']);
@@ -91,7 +94,6 @@ elseif (isset($_GET['check']))
 }
 elseif (isset($_GET['cmd']))
 {
-	
 	$profile = @file_get_contents(WEBEDIT_HOME . DIRECTORY_SEPARATOR . 'profile');
 	define('PROFILE', trim($profile));
 	define('FRAMEWORK_HOME', WEBEDIT_HOME . DIRECTORY_SEPARATOR . 'framework');

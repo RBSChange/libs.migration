@@ -8,6 +8,8 @@ class c_ChangeMigrationScript
 	static $toRelease = '3.5.5';
 	
 	static $patchs = array(
+		"lockApache",
+		
 		"migrateChangeXml",
 	
 		"updateChangeProperties", 
@@ -32,6 +34,22 @@ class c_ChangeMigrationScript
 		
 		"filalizeMigration"	
 		);
+	
+	public function lockApache()
+	{
+		$content = file_get_contents(dirname(__FILE__) . '/migration.apache.conf');
+		$buildHtAccess = WEBEDIT_HOME . '/build/'. $this->getProfile().'/www.htaccess';
+		if (file_exists($buildHtAccess))
+		{
+			if (file_put_contents($buildHtAccess, $content) !== false)
+			{
+				$this->log('Website locked.' . PHP_EOL);
+				return;
+			}
+			$this->log('Unable to write in: ' . $buildHtAccess . PHP_EOL, 'warn');
+		}
+		$this->log('Website is not locked!'. PHP_EOL, 'warn');
+	}
 	
 	/**
 	 * @return boolean
@@ -146,10 +164,10 @@ class c_ChangeMigrationScript
 		$projectPath = WEBEDIT_HOME.'/framework';
 		@unlink($projectPath);
 		
-		$this->log('Link Framework to:' . $localPath. PHP_EOL);
+		$this->log('Link Framework to: ' . $localPath. PHP_EOL);
 		symlink($localPath, $projectPath);
 		
-		$this->log('Update Remote repository to:' . self::REMOTE_REPOSITORY. PHP_EOL);
+		$this->log('Update Remote repository to: ' . self::REMOTE_REPOSITORY. PHP_EOL);
 		$this->updateProjectProperties('REMOTE_REPOSITORIES', self::REMOTE_REPOSITORY);
 		$this->saveProjectProperties();
 	}
@@ -160,11 +178,12 @@ class c_ChangeMigrationScript
 		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());	
 		$this->rmdir(WEBEDIT_HOME . "/cache/autoload");
 		$this->rmdir(WEBEDIT_HOME . "/cache/www");
+		clearstatcache();
 	}
 	
 	public function updateDependencies()
 	{
-		$this->executeTask("update-dependencies");
+		$this->executeTask("update-dependencies", array('--clear'));
 	}
 	
 	public function updateAutoload()
@@ -195,6 +214,8 @@ class c_ChangeMigrationScript
 	
 	public function filalizeMigration()
 	{
+		$this->executeTask("compile-htaccess");
+		$this->executeTask("updater.migrate", array('refresh'));
 		$this->log('Migration ' . self::$fromRelease . ' -> '. self::$toRelease . ' Completly Exectued.'. PHP_EOL);
 	}
 
@@ -540,9 +561,11 @@ class c_ChangeMigrationScript
 	{
 		$this->profile = $this->getProfile();	
 		$this->loadProjectProperties();	
+		$this->log('Total Steps to apply: ' . (count(self::$patchs)) . PHP_EOL);
 		foreach (self::$patchs as $index => $patch)
 		{
-			$this->log('Execute Step (' . $index . '): ' . $patch . PHP_EOL);
+			$this->log('START Step (' . ($index + 1) . '): ' . $patch . PHP_EOL);
+			clearstatcache();
 			if (strpos($patch, ' '))
 			{
 				list ($module, $number) = explode(' ', $patch);
@@ -562,8 +585,8 @@ class c_ChangeMigrationScript
 		{
 			$this->profile = $this->getProfile();
 			$this->loadProjectProperties();	
-						
-			$patch = self::$patchs[$stepIndex];			
+			$patch = self::$patchs[$stepIndex];	
+			$this->logFile('START Step (' . ($stepIndex + 1) . '): ' . $patch . PHP_EOL, 'info');
 			if (strpos($patch, ' '))
 			{
 				list ($module, $number) = explode(' ', $patch);
