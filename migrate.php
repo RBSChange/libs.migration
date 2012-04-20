@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.5.4';
+	static $fromRelease = '3.5.5';
 	
-	static $toRelease = '3.5.5';
+	static $toRelease = '3.6.0';
 	
 	static $patchs = array(
 		"lockApache",
@@ -24,10 +24,67 @@ class c_ChangeMigrationScript
 		
 		"buildProject",
 
-		"framework 0355", // [FIX #56098] Mauvaise gestion des permissions dans l'indexation front
+		"framework 0360", 	// Ajout de la table f_i18n
 		
-		"form 0350", // [FIX #50818] Les conditions d'activation des champs ne tiennent pas compte de la traduction (champ vrai/faux)
+		"framework 0361", 	// Update labels of rootfolders and systemfolders.
+		
+		"contactcard 0360", // Add three new properties to give more flexibility on contact display in frontoffice
+		
+		"dashboard 0360", 	// Delete tplNewDashboard back-office default template
+		
+		"form 0360", 		// Remove form/messageSendingType property
 			
+		"media 0360", 		// Add RemoveTmpFilesTask task
+		
+		"task 0360", 		// Ajout de la tâche task_I18nSynchroTask
+		
+		"theme 0360", 		// Add HTML 5 in doctypes list.
+		
+		"users 0360", 		// Add new notification.
+		
+		"website 0365", 	// Add tales attibutes: alternateclass, url, tagurl, actionurl, currenturl
+		
+		"website 0367", 	// Add website_CleanCSSAndJSCacheTask task
+		
+		"workflow 0360", 	// Convert onHourChange Listener at planned task
+		
+		"sharethis 0360", 		// Import new lists.
+		
+		"projectcare 0360", 	// Add new task and report to check the documents in blocks of pages
+		
+		"forums 0360", 		// Add fields to manage the flag on thread
+				
+		"order 0367", 		// Change the hourChange listener methods by planned system task.
+
+		
+		"catalog 0365", 	// Migrate productqueryfolder documents from featurepacka. Migrate featurepackb.
+		
+		"catalog 0366", 	// Add modules_catalog/lastconsultedproducts list.
+		
+		"catalog 0367", 	// Synchronize shelves visuals on systemtopics. 
+		
+		"order 0365", 		// Migrate waitingresponseorderfolder documents from featurepacka.
+
+		"order 0366", 		// Add orderpreparation document. Transform expedition/useorderlines property to expeditionline document
+
+		"productreturns 0360", 	// Add specificLine property on npaireturn document.		
+		
+		"catalog 0368", 	// Add billingarea document.......
+		
+		"catalog 0369", 	// Add billingarea document .... Remove Deprecated DB Fields.
+		
+		"order 0368", 		// Add billingArea property on cartmodifier document
+			
+		"catalog 0370", 	// Add new shippedIn property on products.
+		
+		"catalog 0371", 	// Migrate avalability comparable property.
+		
+		"catalog 0372", 	// Add billingArea property on paymentfilter and shippingfilter document
+		
+		"customer 0360", 	// Add billingAreaId on voucher document
+		
+		"marketing 0360", 	// Add billingAreaId on coupon document. Add frontendLabel property on animations.
+
 		"clearAll",
 		
 		"compileAll",
@@ -50,55 +107,7 @@ class c_ChangeMigrationScript
 		}
 		$this->log('Website is not locked!'. PHP_EOL, 'warn');
 	}
-	
-	/**
-	 * @return boolean
-	 */
-	public function downloadFramework()
-	{
-		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
-		$fPath = '/framework/framework-' . self::$toRelease;
-		if (is_dir($repositoryPath . $fPath))
-		{
-			return true;
-		}
-		$zipFilePath = $repositoryPath . '/tmp/framework-' . self::$toRelease .'.zip';
-		if (!is_dir(dirname($zipFilePath)) && !mkdir(dirname($zipFilePath), 0777, true))
-		{
-			$this->log('Unable to create: '. dirname($zipFilePath). PHP_EOL, 'error');
-			return false;
-		}
 		
-		$url = self::REMOTE_REPOSITORY . $fPath . '.zip';
-		$this->log('Download framework from : '. $url. PHP_EOL);
-		
-		$result = $this->getRemoteFile($url,  $zipFilePath);
-		if ($result !== true )
-		{
-			
-			$this->log('Unable to download framework: '. $result[0]. ', '.$result[1]. PHP_EOL, 'error');
-			return false;
-		}
-		
-		try 
-		{
-			$this->unzip($zipFilePath, dirname($repositoryPath . $fPath));
-		}
-		catch (Exception $e)
-		{
-			$this->log('Unable to unzip framework: '. $e->getMessage(). PHP_EOL, 'error');
-			return false;
-		}
-		
-		clearstatcache();
-		if (!is_dir($repositoryPath . $fPath))
-		{
-			$this->log('Directory not found: '. $repositoryPath . $fPath. PHP_EOL, 'error');
-			return false;
-		}
-		return true;
-	}
-	
 	public function buildModulesVersion()
 	{
 		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
@@ -125,11 +134,90 @@ class c_ChangeMigrationScript
 		}
 		return $modules;
 	}
+	
+	public function downloadDependencies()
+	{
+		$targets = $this->getReleaseDependencies(self::$toRelease);
+		$current = $this->loadDependencies();
+		$localRepo = $this->getProjectProperty('LOCAL_REPOSITORY');
+		foreach ($current as $type => $parts)
+		{
+			/* @var $parts array */
+			foreach ($parts as $name => $info)
+			{
+				/* @var $info array */
+				if (!$info['localy']) 
+				{
+					$this->log('Ignored '. $type. '/'. $name. ' '. $info['version']. ' Project module'. PHP_EOL);
+					continue;
+				}
+	
+				if (isset($targets[$type][$name]))
+				{
+					$newVersion = $targets[$type][$name]['version'];
+					if ($newVersion != $info['version'])
+					{
+						$newRelPath = substr($info['repoRelativePath'], 0, strlen($info['repoRelativePath']) - strlen($info['version'])) . $newVersion;
+						$newLocalPath = $localRepo . $newRelPath;
+						
+						if (!is_dir($newLocalPath))
+						{		
+							$this->log('Update '. $type. '/'. $name. ' from '. $info['version']. ' to '. $newRelPath. PHP_EOL);
+							$url = self::REMOTE_REPOSITORY . $newRelPath . '.zip';
+							$destFile = tempnam($localRepo .'/tmp', $name);
+			
+							$this->log('Download '. $url. PHP_EOL);
+							$result = $this->getRemoteFile($url, $destFile);
+							
+							if ($result !== true)
+							{
+								$this->log('Unable to download ' . $url. ' error: ' . implode(', ', $result) . PHP_EOL, 'error');
+								return false;
+							}
+							
+							try
+							{
+								$this->unzip($destFile, dirname($info['path']));
+							}
+							catch (Exception $e)
+							{
+								
+								$this->log('Unable to unzip framework: '. $e->getMessage(). PHP_EOL, 'error');
+								return false;
+							}
+							
+							if (!is_dir($newLocalPath))
+							{
+								$this->log('Invalid unzip process '. $destFile. ' -> '. $newLocalPath .  PHP_EOL, 'error');
+								return false;
+							}
+							unlink($destFile);
+						}
+						else
+						{
+							$this->log($type. '/'. $name. '-'. $newVersion. ' Already Downloaded '. PHP_EOL);
+						}
+					}
+					else
+					{
+						$this->log($type. '/'. $name. ' '. $info['version']. ' Is Ok '. PHP_EOL);
+					}
+				}
+				else
+				{
+					$this->log($type. '/'. $name. ' '. $info['version']. ' not found in '. self::$toRelease. ' Release'. PHP_EOL, 'error');
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 		
 	public function migrateChangeXml()
 	{
 		$this->loadChangeXML();
 		$this->changeXML->save(WEBEDIT_HOME . '/change.' .self::$fromRelease .'.xml');
+		
 		$targets = $this->getReleaseModules(self::$toRelease);
 		
 		$nodes = $this->changeXML->getElementsByTagName('framework');
@@ -158,18 +246,15 @@ class c_ChangeMigrationScript
 	
 	public function updateChangeProperties()
 	{
-		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
-		$localPath = $repositoryPath . '/framework/framework-' . self::$toRelease;
-		
 		$projectPath = WEBEDIT_HOME.'/framework';
 		@unlink($projectPath);
 		
+		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
+		$localPath = $repositoryPath . '/framework/framework-' . self::$toRelease;
 		$this->log('Link Framework to: ' . $localPath. PHP_EOL);
 		symlink($localPath, $projectPath);
 		
-		$this->log('Update Remote repository to: ' . self::REMOTE_REPOSITORY. PHP_EOL);
-		$this->updateProjectProperties('REMOTE_REPOSITORIES', self::REMOTE_REPOSITORY);
-		$this->saveProjectProperties();
+		//$this->saveProjectProperties();
 	}
 		
 	public function cleanBuildAndCache()
@@ -555,7 +640,29 @@ class c_ChangeMigrationScript
 			$result[$node->getAttribute('name')] = $node->getAttribute('version');
 		}
 		return $result;
-	}	
+	}
+
+	/**
+	 * @param string $releaseVersion
+	 * @return array
+	 */
+	protected function getReleaseDependencies($releaseVersion)
+	{
+		$result = array();
+		$filename = WEBEDIT_HOME . '/migration/release-' . $releaseVersion . '.xml';
+		$doc = new DOMDocument('1.0', 'UTF-8');
+		$doc->load($filename);
+		$xpath = new DOMXPath($doc);
+		$types = array('change-lib' => 'framework', 'module' => 'modules', 'lib' => 'libs', 'theme' => 'themes', 'pearlib' => 'pearlibs');
+		foreach ($types as $nodeName => $type)
+		{
+			foreach ($xpath->query('//' . $nodeName) as $node)
+			{
+				$result[$type][$node->getAttribute('name')] = array('version' => $node->getAttribute('version'));
+			}
+		}
+		return $result;		
+	}
 	
 	public function main()
 	{
@@ -639,9 +746,9 @@ class c_ChangeMigrationScript
 					
 		if ($this->checkRelease())
 		{
-			if (!$this->downloadFramework())
+			if (!$this->downloadDependencies())
 			{
-				$this->log('Framework ' . self::$toRelease . ' not present localy' . PHP_EOL, 'error');
+				$this->log('Unable to download all dependencies.' . PHP_EOL, 'error');
 				return false;
 			}
 			
@@ -763,6 +870,12 @@ class c_ChangeMigrationScript
 		}
 	}
 	
+	
+	
+	
+	/**
+     * Part of Bootstrap
+	 */
 	protected $instanceProjectKey = null;
 	
 	/**
@@ -917,6 +1030,247 @@ class c_ChangeMigrationScript
 		$this->log('Use Soft php unzip'. PHP_EOL, 'warn');
 		require_once dirname(__FILE__) .'/Zip.php';
 		migration_Zip::unzip($zipFilePath, $targetDir);
+	}
+	
+	/**
+	 * @param string $path
+	 * @return DOMDocument
+	 * 
+	 */
+	private function getNewDOMDocument($path = null)
+	{
+		$doc = new DOMDocument('1.0', 'UTF-8');
+		$doc->formatOutput = true;
+		$doc->preserveWhiteSpace = false;
+		if ($path !== null)
+		{
+			$doc->load($path);
+		}
+		return $doc;
+	}
+	
+	/**
+	 * @param DOMXPath $XPath
+	 * @param string $xPathExpression
+	 * @param DOMNode $context
+	 * @return DOMNodeList
+	 */
+	private function findXPath($XPath, $xPathExpression, $context = null)
+	{
+		if ($context === null)
+		{
+			return $XPath->query($xPathExpression);
+		}
+		else
+		{
+			return $XPath->query($xPathExpression, $context);
+		}
+	}
+	
+	/**
+	 * @param DOMXPath $XPath
+	 * @param string $xPathExpression
+	 * @param DOMNode $context
+	 * @return DOMNode
+	 */
+	private function findUniqueXpath($XPath, $xPathExpression, $context = null)
+	{
+		$nodes = $this->findXPath($XPath, $xPathExpression, $context);
+		if ($nodes->length == 0)
+		{
+			return null;
+		}
+		return $nodes->item(0);
+	}
+	
+	private function loadDependencies()
+	{
+		if ($this->projectProperties === null) {$this->loadProjectProperties();}		
+		$localRepo = $this->getProjectProperty('LOCAL_REPOSITORY');
+		$dependencies = array();
+		
+		$changeXMLDoc =  $this->getNewDOMDocument(WEBEDIT_HOME . '/change.xml');
+		$XPath = new DOMXPath($changeXMLDoc);
+		$XPath->registerNamespace("c", "http://www.rbs.fr/schema/change-project/1.0");
+		
+		$frameworkElem = $this->findUniqueXpath($XPath, "c:dependencies/c:framework");
+		if ($frameworkElem !== null)
+		{
+			$infos = array();
+			$infos['version'] = $frameworkElem->textContent;
+			$repoRelativePath = '/framework/framework-' . $infos['version'];
+			$infos['repoRelativePath'] = $repoRelativePath;
+			$infos['path'] = $localRepo . $repoRelativePath;
+			$infos['link'] = WEBEDIT_HOME . '/framework';				
+			$infos['localy'] = is_dir($infos['path']);
+			$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
+			$dependencies['framework']['framework'] = $infos;
+		}
+		else
+		{
+			$dependencies['framework']['framework'] = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
+		}
+	
+		$dependencies['modules'] = array();
+		foreach ($this->findXPath($XPath, "c:dependencies/c:modules/c:module") as $moduleElem)
+		{
+			/* @var $moduleElem DOMElement */ 
+			$infos = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
+			$matches = array();
+			if (!preg_match('/^(.*?)-([0-9].*)$/', $moduleElem->textContent, $matches))
+			{
+				$moduleName = $moduleElem->textContent;
+			}
+			else
+			{
+				$moduleName = $matches[1];
+				$infos['version'] = $matches[2];
+				$repoRelativePath = '/modules/' . $moduleName . '/' . $moduleName . '-' . $infos['version'];
+				$infos['repoRelativePath'] = $repoRelativePath;
+				$infos['path'] = $localRepo . $repoRelativePath;
+				$infos['link'] = WEBEDIT_HOME . '/modules/' . $moduleName;
+	
+				$infos['localy'] = is_dir($infos['path']);
+				$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
+			}
+			$dependencies['modules'][$moduleName] = $infos;
+		}
+	
+		$dependencies['libs'] = array();
+		foreach ($this->findXPath($XPath, "c:dependencies/c:libs/c:lib") as $libElem)
+		{
+			/* @var $libElem DOMElement */
+			$infos = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
+			$matches = array();
+			if (!preg_match('/^(.*?)-([0-9].*)$/', $libElem->textContent, $matches))
+			{
+				$libName = $libElem->textContent;
+			}
+			else
+			{
+				$libName = $matches[1];
+				$infos['version'] = $matches[2];
+				$repoRelativePath = '/libs/' . $libName . '/' . $libName . '-' . $infos['version'];
+				$infos['repoRelativePath'] = $repoRelativePath;
+				$infos['path'] = $localRepo . $repoRelativePath;
+				$infos['link'] = WEBEDIT_HOME . '/libs/' . $libName;
+	
+				$infos['localy'] = is_dir($infos['path']);
+				$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
+			}
+			$dependencies['libs'][$libName] = $infos;
+		}
+		
+		foreach ($dependencies as $parentDepTypeKey => $parentDeps)
+		{
+			foreach ($parentDeps as $parentDepName => $parentInfos)
+			{
+				if ($parentInfos['localy'] && !isset($parentInfos['implicitdependencies']))
+				{
+					$dependencies[$parentDepTypeKey][$parentDepName]['implicitdependencies'] = true;
+					$filePath = $localRepo . $parentInfos['repoRelativePath'] . '/change.xml';
+					if (is_file($filePath))
+					{
+						$changeXMLDoc = $this->getNewDOMDocument($filePath);
+						$decDeps = $this->loadDependenciesFromXML($changeXMLDoc, $localRepo);
+						foreach ($decDeps as $depTypeKey => $deps)
+						{
+							if (!isset($dependencies[$depTypeKey]))
+							{
+								$dependencies[$depTypeKey] = array();
+							}
+							foreach ($deps as $depName => $infos)
+							{
+								if (!isset($dependencies[$depTypeKey][$depName]))
+								{
+									$infos['depfor'] = $parentDepName;
+									$dependencies[$depTypeKey][$depName] = $infos;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return $dependencies;
+	
+	}
+	
+	/**
+	 * @param DOMDocument $changeXMLDoc
+	 * @return array
+	 */
+	private function loadDependenciesFromXML($changeXMLDoc, $localRepo)
+	{
+		$declaredDeps = array();
+		$XPath = new DOMXPath($changeXMLDoc);
+		$XPath->registerNamespace("cc", "http://www.rbs.fr/schema/change-component/1.0");
+		foreach ($this->findXPath($XPath, "cc:dependencies/cc:dependency") as $dep)
+		{
+			/* @var $dep DOMElement */
+			if ($dep->hasAttribute("optionnal") && $dep->getAttribute("optionnal") == "true") {continue;}
+			$name = $this->findUniqueXpath($XPath, "cc:name", $dep);
+			if ($name == null) {continue;}
+			if ($name->textContent == 'framework') {continue;}
+
+			$matches = null;
+			if (!preg_match('/^([^\/]*)\/(.*)$/', $name->textContent, $matches)) {continue;}
+			$depType = $matches[1];
+			$depName = $matches[2];
+
+			$depTypeKey = null;
+			$repoRelativePath = null;
+			$link = null;
+			switch ($depType)
+			{
+				case "lib" :
+					$depTypeKey = 'libs';
+					$repoRelativePath = '/libs/' . $depName . '/' . $depName . '-';
+					$link = WEBEDIT_HOME . '/libs/' . $depName;
+					break;
+				case "module" :
+				case "change-module" :
+					$depTypeKey = 'modules';
+					$repoRelativePath = '/modules/' . $depName . '/' . $depName . '-';
+					$link = WEBEDIT_HOME . '/modules/' . $depName;
+					break;
+				case "pear" :
+				case "lib-pear" :
+					$depTypeKey = 'pearlibs';
+					$repoRelativePath = '/pearlibs/' . $depName . '/' . $depName . '-';
+					$link = WEBEDIT_HOME . '/libs/pearlibs/' . $depName;
+					break;
+				case "theme" :
+				case "themes" :
+					$depTypeKey = 'themes';
+					$repoRelativePath = '/themes/' . $depName . '/' . $depName . '-';
+					$link = WEBEDIT_HOME . '/themes/' . $depName;
+					break;
+				default:
+					continue;
+			}
+	
+			if (!isset($declaredDeps[$depTypeKey]))
+			{
+				$declaredDeps[$depTypeKey] = array();
+			}
+	
+			$infos = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
+			
+			foreach ($this->findXPath($XPath, "cc:versions/cc:version", $dep) as $versionElem)
+			{
+				$infos['version'] = $versionElem->textContent;
+			}
+	
+			$repoRelativePath .= $infos['version'];
+			$infos['repoRelativePath'] = $repoRelativePath;
+			$infos['path'] = $localRepo . $repoRelativePath;
+			$infos['link'] = $link;
+			$infos['localy'] = is_dir($infos['path']);
+			$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
+			$declaredDeps[$depTypeKey][$depName] = $infos;
+		}
+		return $declaredDeps;
 	}
 }
 
