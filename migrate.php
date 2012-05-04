@@ -84,6 +84,8 @@ class c_ChangeMigrationScript
 		"customer 0360", 	// Add billingAreaId on voucher document
 		
 		"marketing 0360", 	// Add billingAreaId on coupon document. Add frontendLabel property on animations.
+		
+		"catalog 0373", // Update the default local of attribute folder
 
 		"clearAll",
 		
