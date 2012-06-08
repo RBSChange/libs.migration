@@ -10,6 +10,7 @@ session_start();
 
 define("WEBEDIT_HOME", dirname(dirname(realpath(__FILE__))));
 chdir(WEBEDIT_HOME);
+clearstatcache();
 
 require_once WEBEDIT_HOME . '/migration/migrate.php';
 
@@ -70,7 +71,6 @@ class c_ChangeMigrationHTTPScript extends c_ChangeMigrationScript
 		return $lines;
 	}
 }
-clearstatcache();
 
 if (isset($_GET['execStep']))
 {

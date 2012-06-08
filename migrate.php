@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.5.5';
+	static $fromRelease = '3.6.0';
 	
-	static $toRelease = '3.6.0';
+	static $toRelease = '3.6.1';
 	
 	static $patchs = array(
 		"lockApache",
@@ -23,69 +23,8 @@ class c_ChangeMigrationScript
 		"initPojectGenericFiles",
 		
 		"buildProject",
-
-		"framework 0360", 	// Ajout de la table f_i18n
 		
-		"framework 0361", 	// Update labels of rootfolders and systemfolders.
-		
-		"contactcard 0360", // Add three new properties to give more flexibility on contact display in frontoffice
-		
-		"dashboard 0360", 	// Delete tplNewDashboard back-office default template
-		
-		"form 0360", 		// Remove form/messageSendingType property
-			
-		"media 0360", 		// Add RemoveTmpFilesTask task
-		
-		"task 0360", 		// Ajout de la tâche task_I18nSynchroTask
-		
-		"theme 0360", 		// Add HTML 5 in doctypes list.
-		
-		"users 0360", 		// Add new notification.
-		
-		"website 0365", 	// Add tales attibutes: alternateclass, url, tagurl, actionurl, currenturl
-		
-		"website 0367", 	// Add website_CleanCSSAndJSCacheTask task
-		
-		"workflow 0360", 	// Convert onHourChange Listener at planned task
-		
-		"sharethis 0360", 		// Import new lists.
-		
-		"projectcare 0360", 	// Add new task and report to check the documents in blocks of pages
-		
-		"forums 0360", 		// Add fields to manage the flag on thread
-				
-		"order 0367", 		// Change the hourChange listener methods by planned system task.
-
-		
-		"catalog 0365", 	// Migrate productqueryfolder documents from featurepacka. Migrate featurepackb.
-		
-		"catalog 0366", 	// Add modules_catalog/lastconsultedproducts list.
-		
-		"catalog 0367", 	// Synchronize shelves visuals on systemtopics. 
-		
-		"order 0365", 		// Migrate waitingresponseorderfolder documents from featurepacka.
-
-		"order 0366", 		// Add orderpreparation document. Transform expedition/useorderlines property to expeditionline document
-
-		"productreturns 0360", 	// Add specificLine property on npaireturn document.		
-		
-		"catalog 0368", 	// Add billingarea document.......
-		
-		"catalog 0369", 	// Add billingarea document .... Remove Deprecated DB Fields.
-		
-		"order 0368", 		// Add billingArea property on cartmodifier document
-			
-		"catalog 0370", 	// Add new shippedIn property on products.
-		
-		"catalog 0371", 	// Migrate avalability comparable property.
-		
-		"catalog 0372", 	// Add billingArea property on paymentfilter and shippingfilter document
-		
-		"customer 0360", 	// Add billingAreaId on voucher document
-		
-		"marketing 0360", 	// Add billingAreaId on coupon document. Add frontendLabel property on animations.
-		
-		"catalog 0373", // Update the default local of attribute folder
+		//No Patch found Ex "framework 0360"
 
 		"clearAll",
 		
@@ -263,6 +202,8 @@ class c_ChangeMigrationScript
 	{	
 		@unlink(WEBEDIT_HOME . "/.computedChangeComponents.ser");
 		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());	
+		$this->rmdir(WEBEDIT_HOME . "/cache/aop");
+		$this->rmdir(WEBEDIT_HOME . "/cache/aop-backup");
 		$this->rmdir(WEBEDIT_HOME . "/cache/autoload");
 		$this->rmdir(WEBEDIT_HOME . "/cache/www");
 		clearstatcache();
@@ -293,6 +234,8 @@ class c_ChangeMigrationScript
 		$this->executeTask("compile-config");
 		
 		$this->executeTask("compile-documents");
+		
+		$this->executeTask("compile-listeners");
 		
 		$this->executeTask("generate-database");
 		
@@ -1012,26 +955,19 @@ class c_ChangeMigrationScript
 	 */
 	protected function unzip($zipFilePath, $targetDir)
 	{
-		if (class_exists('ZipArchive', false))
+		$zipArch = new ZipArchive();
+		$res = $zipArch->open($zipFilePath);
+		if ($res === TRUE) 
 		{
-			$zipArch = new ZipArchive();
-			$res = $zipArch->open($zipFilePath);
-			if ($res === TRUE) 
-			{
-				$this->log('Use ZipArchive for unzip: '. $zipFilePath . PHP_EOL);
-				$zipArch->extractTo($targetDir);
-				$zipArch->close();
-				return;
-			}
-			else
-			{
-				$this->log('Error on use ZipArchive : ' . $res. PHP_EOL, 'error');
-			}
+			$this->log('Use ZipArchive for unzip: '. $zipFilePath . PHP_EOL);
+			$zipArch->extractTo($targetDir);
+			$zipArch->close();
+			return;
 		}
-		
-		$this->log('Use Soft php unzip'. PHP_EOL, 'warn');
-		require_once dirname(__FILE__) .'/Zip.php';
-		migration_Zip::unzip($zipFilePath, $targetDir);
+		else
+		{
+			$this->log('Error on use ZipArchive : ' . $res. PHP_EOL, 'error');
+		}
 	}
 	
 	/**
