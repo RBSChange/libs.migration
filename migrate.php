@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.6.0';
+	static $fromRelease = '3.6.1';
 	
-	static $toRelease = '3.6.1';
+	static $toRelease = '3.6.2';
 	
 	static $patchs = array(
 		"lockApache",
@@ -24,7 +24,27 @@ class c_ChangeMigrationScript
 		
 		"buildProject",
 		
-		//No Patch found Ex "framework 0360"
+		"catalog 0374", // Import new list modules_catalog/availablelangsforshop.
+		"catalog 0375", // New cross selling implementation.
+		"catalog 0376", // This patch restores the interface for old cross selling inmplementation (fiels in product editors, old blocks).
+		// "catalog 0377", // To use the new implementation, apply this patch instead of 0376. More details in patch's README.
+		"catalog 0378", // Add task for asynchronous Website shop structure generation.
+		
+		"joboffer 0360", // Update spontaneous offer.
+		
+		"order 0369", // Ajout de 2 nouvelles stratégies de frais.
+		
+		"projectcare 0361", // Add new task and report to check orphan page reference.
+		
+		"ecomextended 0360", // New facet system.
+		"ecomextended 0361", // Restore old facet system functionality.
+		
+		"loyalty 0360", // Facebook like and store pucharche events event.
+		
+		"marketing 0361", // Add billingArea property on animation document.
+		
+		"productexporter 0361", // Import missing list and export declarations.
+		"productexporter 0362", // Add modules_productexporter/export model in catalog perspective.
 
 		"clearAll",
 		
