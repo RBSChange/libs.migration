@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.5.5';
+	static $fromRelease = '3.5.6';
 	
-	static $toRelease = '3.5.6';
+	static $toRelease = '3.5.7';
 	
 	static $patchs = array(
 		"lockApache",
@@ -25,7 +25,11 @@ class c_ChangeMigrationScript
 		"buildProject",
 		
 		//No Patch found Ex "framework 0350"
-
+	
+		"catalog 0363", // Import new list modules_catalog/availablelangsforshop.
+		
+		"joboffer 0350", // Update spontaneous offer.
+		
 		"clearAll",
 		
 		"compileAll",
