@@ -33,6 +33,8 @@ class c_ChangeMigrationScript
 		"catalog 0381", //add Display tax value on shop to display that on cart, order and bill
 
 		"contactcard 0361", //Impossible de mettre à jour un contact
+		
+		"rss 0360", //Import new list
 
 		"clearAll",
 		
