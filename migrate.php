@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.6.2';
+	static $fromRelease = '3.6.3';
 	
-	static $toRelease = '3.6.3';
+	static $toRelease = '3.6.4';
 	
 	static $patchs = array(
 		"lockApache",
@@ -24,18 +24,16 @@ class c_ChangeMigrationScript
 		
 		"buildProject",
 		
-		"store 0361", //Gestion des la préparation de commande magasin (initial)
+		"form 0361", // [NEW] Enhance date fields: better year selection in frontoffice and enable floating date range
 
-		"inquiry 0360", //Pas de notification en mode avec workflow
-
-		"catalog 0379", //Absence de la liste modules_catalog/shippingmodeoptions
-		"catalog 0380", //enregistrement du SKU, traitement des espaces en début et fin de chaîne
-		"catalog 0381", //add Display tax value on shop to display that on cart, order and bill
-
-		"contactcard 0361", //Impossible de mettre à jour un contact
+		"catalog 0382", // [FIX #65648] Le statut de publication d'un kit ne change pas si le statut de publication de ses composants change [FIX #65636] Publication des kits contenant des produits déclinés
+		"catalog 0383", // [FIX #73382] Clé de locale invalide
 		
-		"rss 0360", //Import new list
-
+		"inquiry 0361", // [NEW] Add answer template usable on inquiry messages
+		
+		"order 0370", // [FIX #60779] Doublon numéro de commande
+		"order 0371", // [FIX #60779] Doublon numéro de commande
+		
 		"clearAll",
 		
 		"compileAll",
