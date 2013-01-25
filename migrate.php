@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.5.7';
+	static $fromRelease = '3.5.8';
 	
-	static $toRelease = '3.5.8';
+	static $toRelease = '3.5.9';
 	
 	static $patchs = array(
 		"lockApache",
@@ -24,8 +24,6 @@ class c_ChangeMigrationScript
 		
 		"buildProject",
 		
-		"catalog 0364", //Absence de la liste modules_catalog/shippingmodeoptions	
-	
 		"clearAll",
 		
 		"compileAll",
