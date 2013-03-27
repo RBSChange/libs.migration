@@ -3,48 +3,45 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.6.3';
+	/**
+	 * @var string
+	 */
+	static $fromRelease = '3.6.4';
 	
-	static $toRelease = '3.6.4';
+	/**
+	 * @var string
+	 */
+	static $toRelease = '3.6.5';
 	
+	/**
+	 * @var string[]
+	 */
 	static $patchs = array(
 		"lockApache",
 		
 		"migrateChangeXml",
-	
-		"updateChangeProperties", 
-	
-		"cleanBuildAndCache", 
-	
-		"updateDependencies", 
-		
-		"updateAutoload", 
-		
+		"updateChangeProperties",
+		"cleanBuildAndCache",
+		"updateDependencies",
+		"updateAutoload",
 		"initPojectGenericFiles",
-		
 		"buildProject",
 		
-		"form 0361", // [NEW] Enhance date fields: better year selection in frontoffice and enable floating date range
-
-		"catalog 0382", // [FIX #65648] Le statut de publication d'un kit ne change pas si le statut de publication de ses composants change [FIX #65636] Publication des kits contenant des produits déclinés
-		"catalog 0383", // [FIX #73382] Clé de locale invalide
-		
-		"inquiry 0361", // [NEW] Add answer template usable on inquiry messages
-		
-		"order 0370", // [FIX #60779] Doublon numéro de commande
-		"order 0371", // [FIX #60779] Doublon numéro de commande
+		"framework 0362", // [FIX] Fix connection to the database. Now use UTF8 by default
+		"website 0368", // [FIX #76429] Initialisation d'un site avec la structure d'exemple
+		"blog 0360", // [FIX #75480] Référencment - meta du blog
+		"catalog 0384", // [FIX #73722] Ordonner les produits liés
 		
 		"clearAll",
-		
 		"compileAll",
 		
-		"filalizeMigration"	
-		);
+		"filalizeMigration"
+	);
 	
 	public function lockApache()
 	{
 		$content = file_get_contents(dirname(__FILE__) . '/migration.apache.conf');
-		$buildHtAccess = WEBEDIT_HOME . '/build/'. $this->getProfile().'/www.htaccess';
+		$buildHtAccess = WEBEDIT_HOME . '/build/' . $this->getProfile() . '/www.htaccess';
 		if (file_exists($buildHtAccess))
 		{
 			if (file_put_contents($buildHtAccess, $content) !== false)
@@ -54,9 +51,12 @@ class c_ChangeMigrationScript
 			}
 			$this->log('Unable to write in: ' . $buildHtAccess . PHP_EOL, 'warn');
 		}
-		$this->log('Website is not locked!'. PHP_EOL, 'warn');
+		$this->log('Website is not locked!' . PHP_EOL, 'warn');
 	}
-		
+	
+	/**
+	 * @return array
+	 */
 	public function buildModulesVersion()
 	{
 		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
@@ -74,7 +74,7 @@ class c_ChangeMigrationScript
 					if ($nl->length)
 					{
 						$version = $nl->item(0)->textContent;
-						$repoPath = $repositoryPath. '/modules/' . $moduleName . '/' . $moduleName .'-' . $version .'/change.xml';
+						$repoPath = $repositoryPath . '/modules/' . $moduleName . '/' . $moduleName . '-' . $version . '/change.xml';
 						$repo = (file_exists($repoPath) && realpath($repoPath) == realpath($path));
 						$modules[$moduleName] = array('repo' => $repo, 'version' => $version);
 					}
@@ -84,6 +84,9 @@ class c_ChangeMigrationScript
 		return $modules;
 	}
 	
+	/**
+	 * @return boolean
+	 */
 	public function downloadDependencies()
 	{
 		$targets = $this->getReleaseDependencies(self::$toRelease);
@@ -95,12 +98,12 @@ class c_ChangeMigrationScript
 			foreach ($parts as $name => $info)
 			{
 				/* @var $info array */
-				if (!$info['localy']) 
+				if (!$info['localy'])
 				{
-					$this->log('Ignored '. $type. '/'. $name. ' '. $info['version']. ' Project module'. PHP_EOL);
+					$this->log('Ignored ' . $type . '/' . $name . ' ' . $info['version'] . ' Project module' . PHP_EOL);
 					continue;
 				}
-	
+				
 				if (isset($targets[$type][$name]))
 				{
 					$newVersion = $targets[$type][$name]['version'];
@@ -110,17 +113,17 @@ class c_ChangeMigrationScript
 						$newLocalPath = $localRepo . $newRelPath;
 						
 						if (!is_dir($newLocalPath))
-						{		
-							$this->log('Update '. $type. '/'. $name. ' from '. $info['version']. ' to '. $newRelPath. PHP_EOL);
+						{
+							$this->log('Update ' . $type . '/' . $name . ' from ' . $info['version'] . ' to ' . $newRelPath . PHP_EOL);
 							$url = self::REMOTE_REPOSITORY . $newRelPath . '.zip';
-							$destFile = tempnam($localRepo .'/tmp', $name);
-			
-							$this->log('Download '. $url. PHP_EOL);
+							$destFile = tempnam($localRepo . '/tmp', $name);
+							
+							$this->log('Download ' . $url . PHP_EOL);
 							$result = $this->getRemoteFile($url, $destFile);
 							
 							if ($result !== true)
 							{
-								$this->log('Unable to download ' . $url. ' error: ' . implode(', ', $result) . PHP_EOL, 'error');
+								$this->log('Unable to download ' . $url . ' error: ' . implode(', ', $result) . PHP_EOL, 'error');
 								return false;
 							}
 							
@@ -131,85 +134,94 @@ class c_ChangeMigrationScript
 							catch (Exception $e)
 							{
 								
-								$this->log('Unable to unzip framework: '. $e->getMessage(). PHP_EOL, 'error');
+								$this->log('Unable to unzip framework: ' . $e->getMessage() . PHP_EOL, 'error');
 								return false;
 							}
 							
 							if (!is_dir($newLocalPath))
 							{
-								$this->log('Invalid unzip process '. $destFile. ' -> '. $newLocalPath .  PHP_EOL, 'error');
+								$this->log('Invalid unzip process ' . $destFile . ' -> ' . $newLocalPath . PHP_EOL, 'error');
 								return false;
 							}
 							unlink($destFile);
 						}
 						else
 						{
-							$this->log($type. '/'. $name. '-'. $newVersion. ' Already Downloaded '. PHP_EOL);
+							$this->log($type . '/' . $name . '-' . $newVersion . ' Already Downloaded ' . PHP_EOL);
 						}
 					}
 					else
 					{
-						$this->log($type. '/'. $name. ' '. $info['version']. ' Is Ok '. PHP_EOL);
+						$this->log($type . '/' . $name . ' ' . $info['version'] . ' Is Ok ' . PHP_EOL);
 					}
 				}
 				else
 				{
-					$this->log($type. '/'. $name. ' '. $info['version']. ' not found in '. self::$toRelease. ' Release'. PHP_EOL, 'error');
+					$this->log($type . '/' . $name . ' ' . $info['version'] . ' not found in ' . self::$toRelease . ' Release' . PHP_EOL, 'error');
 					return false;
 				}
 			}
 		}
 		return true;
 	}
-		
+	
 	public function migrateChangeXml()
 	{
 		$this->loadChangeXML();
-		$this->changeXML->save(WEBEDIT_HOME . '/change.' .self::$fromRelease .'.xml');
+		$this->changeXML->save(WEBEDIT_HOME . '/change.' . self::$fromRelease . '.xml');
 		
 		$targets = $this->getReleaseModules(self::$toRelease);
 		
 		$nodes = $this->changeXML->getElementsByTagName('framework');
 		$node = $nodes->item(0);
 		$t = $targets['framework'];
-		$this->log('framework ' .$node->textContent . ' -> ' . $t . PHP_EOL);		
-		while ($node->hasChildNodes()){$node->removeChild($node->lastChild);}
+		$this->log('framework ' . $node->textContent . ' -> ' . $t . PHP_EOL);
+		while ($node->hasChildNodes())
+		{
+			$node->removeChild($node->lastChild);
+		}
 		$node->appendChild($this->changeXML->createTextNode($t));
 		
 		foreach ($this->changeXML->getElementsByTagName('module') as $node)
 		{
 			$parts = explode('-', $node->textContent);
-			if (count($parts) != 2) {continue;}
+			if (count($parts) != 2)
+			{
+				continue;
+			}
 			list ($modulename, $version) = $parts;
 			if (isset($targets[$modulename]))
 			{
 				$t = $targets[$modulename];
 				$this->log($modulename . ' ' . $version . ' -> ' . $t . PHP_EOL);
-				while ($node->hasChildNodes()) {$node->removeChild($node->lastChild);}
+				while ($node->hasChildNodes())
+				{
+					$node->removeChild($node->lastChild);
+				}
 				$node->appendChild($this->changeXML->createTextNode($modulename . '-' . $t));
 			}
 		}
-			
+		
 		$this->changeXML->save(WEBEDIT_HOME . '/change.xml');
 	}
 	
 	public function updateChangeProperties()
 	{
-		$projectPath = WEBEDIT_HOME.'/framework';
+		$projectPath = WEBEDIT_HOME . '/framework';
 		@unlink($projectPath);
 		
 		$repositoryPath = $this->getProjectProperty('LOCAL_REPOSITORY');
 		$localPath = $repositoryPath . '/framework/framework-' . self::$toRelease;
-		$this->log('Link Framework to: ' . $localPath. PHP_EOL);
+		$this->log('Link Framework to: ' . $localPath . PHP_EOL);
 		symlink($localPath, $projectPath);
 		
 		//$this->saveProjectProperties();
 	}
-		
+	
 	public function cleanBuildAndCache()
-	{	
+	{
 		@unlink(WEBEDIT_HOME . "/.computedChangeComponents.ser");
-		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());	
+		$this->rmdir(WEBEDIT_HOME . "/cache/" . $this->getProfile());
 		$this->rmdir(WEBEDIT_HOME . "/cache/aop");
 		$this->rmdir(WEBEDIT_HOME . "/cache/aop-backup");
 		$this->rmdir(WEBEDIT_HOME . "/cache/autoload");
@@ -233,12 +245,11 @@ class c_ChangeMigrationScript
 		
 		$this->executeTask("apply-project-policy");
 		
-		$this->executeTask("init-webapp");		
+		$this->executeTask("init-webapp");
 	}
 	
 	public function buildProject()
 	{
-		
 		$this->executeTask("compile-config");
 		
 		$this->executeTask("compile-documents");
@@ -254,20 +265,20 @@ class c_ChangeMigrationScript
 	{
 		$this->executeTask("compile-htaccess");
 		$this->executeTask("updater.migrate", array('refresh'));
-		$this->log('Migration ' . self::$fromRelease . ' -> '. self::$toRelease . ' Completly Exectued.'. PHP_EOL);
+		$this->log('Migration ' . self::$fromRelease . ' -> ' . self::$toRelease . ' Completly Exectued.' . PHP_EOL);
 	}
-
+	
 	public function clearAll()
 	{
 		$this->executeTask("clear-all");
 	}
-
+	
 	public function compileAll()
 	{
 		$this->executeTask("compile-all");
-	}	
+	}
 	//TOOL FUNCTIONS
-
+	
 	/**
 	 * @var array
 	 */
@@ -295,9 +306,9 @@ class c_ChangeMigrationScript
 		}
 		else
 		{
-			$this->log("Patch not found ". $module. " ". $number. PHP_EOL, 'info');
+			$this->log("Patch not found " . $module . " " . $number . PHP_EOL, 'info');
 		}
-	}	
+	}
 	
 	/**
 	 * @param String $task
@@ -307,12 +318,21 @@ class c_ChangeMigrationScript
 	protected function executeTask($task, $args = array(), $log = true)
 	{
 		$phpCli = $this->getProjectProperty('PHP_CLI_PATH');
-		if ($phpCli === null) {$phpCli = "php";}
-		if (!empty($phpCli)) {$phpCli .= ' ';}
+		if ($phpCli === null)
+		{
+			$phpCli = "php";
+		}
+		if (!empty($phpCli))
+		{
+			$phpCli .= ' ';
+		}
 		
 		$cmd = $phpCli . WEBEDIT_HOME . "/framework/bin/change.php $task " . implode(" ", $args);
 		$result = $this->exec($cmd);
-		if ($log) {$this->log($result);}
+		if ($log)
+		{
+			$this->log($result);
+		}
 		return $result;
 	}
 	
@@ -337,7 +357,7 @@ class c_ChangeMigrationScript
 		$output = array();
 		
 		stream_set_blocking($pipes[2], 0);
-		fclose($pipes[0]);		
+		fclose($pipes[0]);
 		while (!feof($pipes[1]))
 		{
 			$s = fread($pipes[1], 512);
@@ -348,7 +368,7 @@ class c_ChangeMigrationScript
 			}
 			$output[] = $s;
 		}
-
+		
 		$retVal = proc_close($proc);
 		if (0 != $retVal)
 		{
@@ -408,7 +428,7 @@ class c_ChangeMigrationScript
 			return true;
 		}
 		return false;
-	}	
+	}
 	
 	/**
 	 * @param string $url
@@ -418,13 +438,12 @@ class c_ChangeMigrationScript
 	protected function wget($url, &$curldata, &$err)
 	{
 		$cr = curl_init();
-		$options = array(CURLOPT_RETURNTRANSFER => true, 
-			CURLOPT_TIMEOUT => 600, CURLOPT_CONNECTTIMEOUT => 5,
-		 	CURLOPT_FOLLOWLOCATION => false, CURLOPT_URL => $url, CURLOPT_POSTFIELDS => null, 
-		 	CURLOPT_POST => false, CURLOPT_SSL_VERIFYPEER =>false);
-		curl_setopt_array( $cr, $options );
-		$curldata = curl_exec( $cr );
-		$errNumber = curl_errno( $cr );
+		$options = array(CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 600, CURLOPT_CONNECTTIMEOUT => 5, 
+			CURLOPT_FOLLOWLOCATION => false, CURLOPT_URL => $url, CURLOPT_POSTFIELDS => null, CURLOPT_POST => false, 
+			CURLOPT_SSL_VERIFYPEER => false);
+		curl_setopt_array($cr, $options);
+		$curldata = curl_exec($cr);
+		$errNumber = curl_errno($cr);
 		if ($errNumber !== 0)
 		{
 			$err = curl_error($cr) . ' (code: ' . $errNumber . ')';
@@ -433,7 +452,7 @@ class c_ChangeMigrationScript
 		{
 			$err = false;
 		}
-		curl_close( $cr );
+		curl_close($cr);
 	}
 	
 	/**
@@ -472,7 +491,10 @@ class c_ChangeMigrationScript
 	 */
 	protected function getCurrentRelease()
 	{
-		if ($this->changeXML === null) {$this->loadChangeXML();}
+		if ($this->changeXML === null)
+		{
+			$this->loadChangeXML();
+		}
 		
 		if ($this->changeXML)
 		{
@@ -497,9 +519,15 @@ class c_ChangeMigrationScript
 	 */
 	protected function checkModuleVersion($moduleName, $version = null)
 	{
-		if ($version === null) {$version = self::$toRelease;}
+		if ($version === null)
+		{
+			$version = self::$toRelease;
+		}
 		
-		if ($this->changeXML === null) {$this->loadChangeXML();}
+		if ($this->changeXML === null)
+		{
+			$this->loadChangeXML();
+		}
 		if ($this->changeXML)
 		{
 			$modules = $this->changeXML->getElementsByTagName('module');
@@ -522,7 +550,7 @@ class c_ChangeMigrationScript
 		$changePropertiesPath = WEBEDIT_HOME . '/change.properties';
 		if (is_readable($changePropertiesPath))
 		{
-			$this->projectProperties = file($changePropertiesPath);	
+			$this->projectProperties = file($changePropertiesPath);
 			return true;
 		}
 		$this->log('Unable to load : ' . $changePropertiesPath . PHP_EOL, 'error');
@@ -547,6 +575,9 @@ class c_ChangeMigrationScript
 		$this->projectProperties[] = PHP_EOL . $name . '=' . $value . PHP_EOL;
 	}
 	
+	/**
+	 * @param string $name
+	 */
 	protected function getProjectProperty($name)
 	{
 		foreach ($this->projectProperties as $index => $line)
@@ -567,8 +598,7 @@ class c_ChangeMigrationScript
 	
 	protected function saveProjectProperties()
 	{
-		file_put_contents(WEBEDIT_HOME . '/change.properties', 
-				implode('', $this->projectProperties));
+		file_put_contents(WEBEDIT_HOME . '/change.properties', implode('', $this->projectProperties));
 	}
 	
 	/**
@@ -583,18 +613,18 @@ class c_ChangeMigrationScript
 		$doc->load($filename);
 		$xpath = new DOMXPath($doc);
 		
-		foreach ($xpath->query('//change-lib[@name="framework"]') as $node) 
+		foreach ($xpath->query('//change-lib[@name="framework"]') as $node)
 		{
 			$result['framework'] = $node->getAttribute('version');
 		}
 		
-		foreach ($xpath->query('//module') as $node) 
+		foreach ($xpath->query('//module') as $node)
 		{
 			$result[$node->getAttribute('name')] = $node->getAttribute('version');
 		}
 		return $result;
 	}
-
+	
 	/**
 	 * @param string $releaseVersion
 	 * @return array
@@ -606,7 +636,8 @@ class c_ChangeMigrationScript
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$doc->load($filename);
 		$xpath = new DOMXPath($doc);
-		$types = array('change-lib' => 'framework', 'module' => 'modules', 'lib' => 'libs', 'theme' => 'themes', 'pearlib' => 'pearlibs');
+		$types = array('change-lib' => 'framework', 'module' => 'modules', 'lib' => 'libs', 'theme' => 'themes', 
+			'pearlib' => 'pearlibs');
 		foreach ($types as $nodeName => $type)
 		{
 			foreach ($xpath->query('//' . $nodeName) as $node)
@@ -614,13 +645,13 @@ class c_ChangeMigrationScript
 				$result[$type][$node->getAttribute('name')] = array('version' => $node->getAttribute('version'));
 			}
 		}
-		return $result;		
+		return $result;
 	}
 	
 	public function main()
 	{
-		$this->profile = $this->getProfile();	
-		$this->loadProjectProperties();	
+		$this->profile = $this->getProfile();
+		$this->loadProjectProperties();
 		$this->log('Total Steps to apply: ' . (count(self::$patchs)) . PHP_EOL);
 		foreach (self::$patchs as $index => $patch)
 		{
@@ -639,13 +670,16 @@ class c_ChangeMigrationScript
 		}
 	}
 	
+	/**
+	 * @return boolean
+	 */
 	public function executeStep($stepIndex)
 	{
 		if (isset(self::$patchs[$stepIndex]))
 		{
 			$this->profile = $this->getProfile();
-			$this->loadProjectProperties();	
-			$patch = self::$patchs[$stepIndex];	
+			$this->loadProjectProperties();
+			$patch = self::$patchs[$stepIndex];
 			$this->logFile('START Step (' . ($stepIndex + 1) . '): ' . $patch . PHP_EOL, 'info');
 			if (strpos($patch, ' '))
 			{
@@ -660,17 +694,20 @@ class c_ChangeMigrationScript
 		}
 		else
 		{
-			$this->log('Step '. $stepIndex. ' not found' . PHP_EOL, 'error');
+			$this->log('Step ' . $stepIndex . ' not found' . PHP_EOL, 'error');
 		}
 		return false;
 	}
 	
+	/**
+	 * @return boolean
+	 */
 	public function check()
-	{		
+	{
 		$profilePath = WEBEDIT_HOME . "/profile";
 		if (!file_exists($profilePath))
 		{
-			$this->log('Profile file not found'. PHP_EOL, 'error');
+			$this->log('Profile file not found' . PHP_EOL, 'error');
 			return false;
 		}
 		$this->profile = $this->getProfile();
@@ -679,13 +716,13 @@ class c_ChangeMigrationScript
 		{
 			return false;
 		}
-
+		
 		if ($this->getCurrentRelease() != self::$fromRelease)
 		{
 			$this->log('Invalid current release: ' . $this->getCurrentRelease() . PHP_EOL, 'error');
 			return false;
 		}
-
+		
 		if (!$this->loadProjectProperties())
 		{
 			return false;
@@ -696,7 +733,7 @@ class c_ChangeMigrationScript
 			$this->log('Add constant PHP_CLI_PATH in your change.properties config file. (ex: PHP_CLI_PATH=php)' . PHP_EOL, 'error');
 			return false;
 		}
-					
+		
 		if ($this->checkRelease())
 		{
 			if (!$this->downloadDependencies())
@@ -710,7 +747,6 @@ class c_ChangeMigrationScript
 				return false;
 			}
 			
-			
 			if ($this->checkExecution())
 			{
 				return true;
@@ -719,6 +755,9 @@ class c_ChangeMigrationScript
 		return false;
 	}
 	
+	/**
+	 * @return boolean
+	 */
 	protected function checkRelease()
 	{
 		$toName = 'release-' . self::$toRelease . '.xml';
@@ -733,6 +772,9 @@ class c_ChangeMigrationScript
 		return true;
 	}
 	
+	/**
+	 * @return boolean
+	 */
 	protected function checkLicense()
 	{
 		$modules = $this->buildModulesVersion();
@@ -778,10 +820,13 @@ class c_ChangeMigrationScript
 				$this->log('Invalid xml license file: ' . $destFile . PHP_EOL, 'error');
 			}
 		}
-		$this->log('Unable to check license: ' . implode(', ', $result). PHP_EOL, 'error');
+		$this->log('Unable to check license: ' . implode(', ', $result) . PHP_EOL, 'error');
 		return false;
 	}
 	
+	/**
+	 * @return boolean|integer
+	 */
 	protected function checkExecution()
 	{
 		if (!is_readable(WEBEDIT_HOME . '/modules/updater/change.xml'))
@@ -797,6 +842,10 @@ class c_ChangeMigrationScript
 	 */
 	private $logFilePath;
 	
+	/**
+	 * @param string $message
+	 * @param string $level
+	 */
 	protected function logFile($message, $level)
 	{
 		if ($this->logFilePath === null)
@@ -807,15 +856,19 @@ class c_ChangeMigrationScript
 				mkdir(dirname($this->logFilePath), 0777, true);
 			}
 		}
-		error_log(date('Y-m-d H:i:s'). ' - ' . strtoupper($level) . ' - '. $message, 3, $this->logFilePath);
+		error_log(date('Y-m-d H:i:s') . ' - ' . strtoupper($level) . ' - ' . $message, 3, $this->logFilePath);
 	}
 	
+	/**
+	 * @param string $message
+	 * @param string $level
+	 */
 	public function log($message, $level = "info")
 	{
 		$this->logFile($message, $level);
 		if ($level === 'warn' || $level === 'error')
 		{
-			echo strtoupper($level) , ': ', $message;
+			echo strtoupper($level), ': ', $message;
 		}
 		else
 		{
@@ -823,11 +876,8 @@ class c_ChangeMigrationScript
 		}
 	}
 	
-	
-	
-	
 	/**
-     * Part of Bootstrap
+	 * Part of Bootstrap
 	 */
 	protected $instanceProjectKey = null;
 	
@@ -840,7 +890,10 @@ class c_ChangeMigrationScript
 		if ($this->instanceProjectKey === null)
 		{
 			$license = $this->getProjectProperty("PROJECT_LICENSE");
-			if (empty($license)) {$license = "OS";}
+			if (empty($license))
+			{
+				$license = "OS";
+			}
 			
 			$mode = ($this->getProjectProperty("DEVELOPMENT_MODE") === 'true') ? "DEV" : "PROD";
 			
@@ -848,7 +901,7 @@ class c_ChangeMigrationScript
 			$profile = '-';
 			$pId = '-';
 			$fqdn = '-';
-				
+			
 			$profilePath = WEBEDIT_HOME . '/profile';
 			if (is_readable($profilePath))
 			{
@@ -861,10 +914,16 @@ class c_ChangeMigrationScript
 					{
 						$xpath = new DOMXpath($changeXMLDoc);
 						$nl = $xpath->query('defines/define[@name="PROJECT_ID"]');
-						if ($nl->length) {$pId = $nl->item(0)->textContent;}
+						if ($nl->length)
+						{
+							$pId = $nl->item(0)->textContent;
+						}
 						
 						$nl = $xpath->query('config/general/entry[@name="server-fqdn"]');
-						if ($nl->length) {$fqdn = $nl->item(0)->textContent;}
+						if ($nl->length)
+						{
+							$fqdn = $nl->item(0)->textContent;
+						}
 					}
 				}
 			}
@@ -881,7 +940,7 @@ class c_ChangeMigrationScript
 	{
 		return $this->getProjectProperty("PROXY");
 	}
-
+	
 	/**
 	 * Part of Bootstrap
 	 */
@@ -903,7 +962,7 @@ class c_ChangeMigrationScript
 			$this->remoteError = array(-1, 'Fopen error for filename ', $destFile);
 			return $this->remoteError;
 		}
-	
+		
 		$ch = curl_init($url);
 		if ($ch == false)
 		{
@@ -912,26 +971,26 @@ class c_ChangeMigrationScript
 		}
 		
 		$userAgent = $this->getInstanceProjectKey();
-
+		
 		curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
 		curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 		curl_setopt($ch, CURLOPT_COOKIEFILE, '');
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 600);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-	
+		
 		if (is_array($postDataArray) && count($postDataArray))
 		{
-			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postDataArray, null , '&'));
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postDataArray, null, '&'));
 			curl_setopt($ch, CURLOPT_POST, true);
 		}
-	
+		
 		$proxy = $this->getProxy();
 		if ($proxy !== null)
 		{
 			curl_setopt($ch, CURLOPT_PROXY, $proxy);
 		}
-	
+		
 		curl_setopt($ch, CURLOPT_FILE, $fp);
 		curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
 		if (curl_exec($ch) === false)
@@ -942,17 +1001,18 @@ class c_ChangeMigrationScript
 			curl_close($ch);
 			return $this->remoteError;
 		}
-	
+		
 		fclose($fp);
 		$info = curl_getinfo($ch);
 		curl_close($ch);
 		if ($info["http_code"] != "200")
 		{
 			unlink($destFile);
-			$this->remoteError = array($info["http_code"], "Could not download " . $url . ": bad http status (" . $info["http_code"] . ")");
+			$this->remoteError = array($info["http_code"], 
+				"Could not download " . $url . ": bad http status (" . $info["http_code"] . ")");
 			return $this->remoteError;
 		}
-	
+		
 		return $this->remoteError;
 	}
 	
@@ -965,23 +1025,22 @@ class c_ChangeMigrationScript
 	{
 		$zipArch = new ZipArchive();
 		$res = $zipArch->open($zipFilePath);
-		if ($res === TRUE) 
+		if ($res === TRUE)
 		{
-			$this->log('Use ZipArchive for unzip: '. $zipFilePath . PHP_EOL);
+			$this->log('Use ZipArchive for unzip: ' . $zipFilePath . PHP_EOL);
 			$zipArch->extractTo($targetDir);
 			$zipArch->close();
 			return;
 		}
 		else
 		{
-			$this->log('Error on use ZipArchive : ' . $res. PHP_EOL, 'error');
+			$this->log('Error on use ZipArchive : ' . $res . PHP_EOL, 'error');
 		}
 	}
 	
 	/**
 	 * @param string $path
 	 * @return DOMDocument
-	 * 
 	 */
 	private function getNewDOMDocument($path = null)
 	{
@@ -1029,13 +1088,19 @@ class c_ChangeMigrationScript
 		return $nodes->item(0);
 	}
 	
+	/**
+	 * @return array
+	 */
 	private function loadDependencies()
 	{
-		if ($this->projectProperties === null) {$this->loadProjectProperties();}		
+		if ($this->projectProperties === null)
+		{
+			$this->loadProjectProperties();
+		}
 		$localRepo = $this->getProjectProperty('LOCAL_REPOSITORY');
 		$dependencies = array();
 		
-		$changeXMLDoc =  $this->getNewDOMDocument(WEBEDIT_HOME . '/change.xml');
+		$changeXMLDoc = $this->getNewDOMDocument(WEBEDIT_HOME . '/change.xml');
 		$XPath = new DOMXPath($changeXMLDoc);
 		$XPath->registerNamespace("c", "http://www.rbs.fr/schema/change-project/1.0");
 		
@@ -1047,20 +1112,21 @@ class c_ChangeMigrationScript
 			$repoRelativePath = '/framework/framework-' . $infos['version'];
 			$infos['repoRelativePath'] = $repoRelativePath;
 			$infos['path'] = $localRepo . $repoRelativePath;
-			$infos['link'] = WEBEDIT_HOME . '/framework';				
+			$infos['link'] = WEBEDIT_HOME . '/framework';
 			$infos['localy'] = is_dir($infos['path']);
 			$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
 			$dependencies['framework']['framework'] = $infos;
 		}
 		else
 		{
-			$dependencies['framework']['framework'] = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
+			$dependencies['framework']['framework'] = array('localy' => false, 'linked' => false, 'version' => '', 
+				'repoRelativePath' => null);
 		}
-	
+		
 		$dependencies['modules'] = array();
 		foreach ($this->findXPath($XPath, "c:dependencies/c:modules/c:module") as $moduleElem)
 		{
-			/* @var $moduleElem DOMElement */ 
+			/* @var $moduleElem DOMElement */
 			$infos = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
 			$matches = array();
 			if (!preg_match('/^(.*?)-([0-9].*)$/', $moduleElem->textContent, $matches))
@@ -1075,13 +1141,13 @@ class c_ChangeMigrationScript
 				$infos['repoRelativePath'] = $repoRelativePath;
 				$infos['path'] = $localRepo . $repoRelativePath;
 				$infos['link'] = WEBEDIT_HOME . '/modules/' . $moduleName;
-	
+				
 				$infos['localy'] = is_dir($infos['path']);
 				$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
 			}
 			$dependencies['modules'][$moduleName] = $infos;
 		}
-	
+		
 		$dependencies['libs'] = array();
 		foreach ($this->findXPath($XPath, "c:dependencies/c:libs/c:lib") as $libElem)
 		{
@@ -1100,7 +1166,7 @@ class c_ChangeMigrationScript
 				$infos['repoRelativePath'] = $repoRelativePath;
 				$infos['path'] = $localRepo . $repoRelativePath;
 				$infos['link'] = WEBEDIT_HOME . '/libs/' . $libName;
-	
+				
 				$infos['localy'] = is_dir($infos['path']);
 				$infos['linked'] = $infos['localy'] && file_exists($infos['link']) && realpath($infos['path']) == realpath($infos['link']);
 			}
@@ -1139,7 +1205,6 @@ class c_ChangeMigrationScript
 			}
 		}
 		return $dependencies;
-	
 	}
 	
 	/**
@@ -1154,16 +1219,28 @@ class c_ChangeMigrationScript
 		foreach ($this->findXPath($XPath, "cc:dependencies/cc:dependency") as $dep)
 		{
 			/* @var $dep DOMElement */
-			if ($dep->hasAttribute("optionnal") && $dep->getAttribute("optionnal") == "true") {continue;}
+			if ($dep->hasAttribute("optionnal") && $dep->getAttribute("optionnal") == "true")
+			{
+				continue;
+			}
 			$name = $this->findUniqueXpath($XPath, "cc:name", $dep);
-			if ($name == null) {continue;}
-			if ($name->textContent == 'framework') {continue;}
-
+			if ($name == null)
+			{
+				continue;
+			}
+			if ($name->textContent == 'framework')
+			{
+				continue;
+			}
+			
 			$matches = null;
-			if (!preg_match('/^([^\/]*)\/(.*)$/', $name->textContent, $matches)) {continue;}
+			if (!preg_match('/^([^\/]*)\/(.*)$/', $name->textContent, $matches))
+			{
+				continue;
+			}
 			$depType = $matches[1];
 			$depName = $matches[2];
-
+			
 			$depTypeKey = null;
 			$repoRelativePath = null;
 			$link = null;
@@ -1192,22 +1269,22 @@ class c_ChangeMigrationScript
 					$repoRelativePath = '/themes/' . $depName . '/' . $depName . '-';
 					$link = WEBEDIT_HOME . '/themes/' . $depName;
 					break;
-				default:
+				default :
 					continue;
 			}
-	
+			
 			if (!isset($declaredDeps[$depTypeKey]))
 			{
 				$declaredDeps[$depTypeKey] = array();
 			}
-	
+			
 			$infos = array('localy' => false, 'linked' => false, 'version' => '', 'repoRelativePath' => null);
 			
 			foreach ($this->findXPath($XPath, "cc:versions/cc:version", $dep) as $versionElem)
 			{
 				$infos['version'] = $versionElem->textContent;
 			}
-	
+			
 			$repoRelativePath .= $infos['version'];
 			$infos['repoRelativePath'] = $repoRelativePath;
 			$infos['path'] = $localRepo . $repoRelativePath;
