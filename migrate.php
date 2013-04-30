@@ -31,6 +31,7 @@ class c_ChangeMigrationScript
 		"website 0368", // [FIX #76429] Initialisation d'un site avec la structure d'exemple
 		"blog 0360", // [FIX #75480] Référencment - meta du blog
 		"catalog 0384", // [FIX #73722] Ordonner les produits liés
+		"website 0369", // Set "modules/website/useBeanPopulateStrictMode" project configuration value to "false" on existing projects.
 		
 		"clearAll",
 		"compileAll",
