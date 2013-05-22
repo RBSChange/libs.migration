@@ -6,12 +6,12 @@ class c_ChangeMigrationScript
 	/**
 	 * @var string
 	 */
-	static $fromRelease = '3.6.4';
+	static $fromRelease = '3.6.5';
 	
 	/**
 	 * @var string
 	 */
-	static $toRelease = '3.6.5';
+	static $toRelease = '3.6.6';
 	
 	/**
 	 * @var string[]
@@ -27,10 +27,6 @@ class c_ChangeMigrationScript
 		"initPojectGenericFiles",
 		"buildProject",
 		
-		"framework 0362", // [FIX] Fix connection to the database. Now use UTF8 by default
-		"website 0368", // [FIX #76429] Initialisation d'un site avec la structure d'exemple
-		"blog 0360", // [FIX #75480] Référencment - meta du blog
-		"catalog 0384", // [FIX #73722] Ordonner les produits liés
 		"website 0369", // Set "modules/website/useBeanPopulateStrictMode" project configuration value to "false" on existing projects.
 		
 		"clearAll",
