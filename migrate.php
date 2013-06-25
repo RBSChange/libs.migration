@@ -6,12 +6,12 @@ class c_ChangeMigrationScript
 	/**
 	 * @var string
 	 */
-	static $fromRelease = '3.6.5';
+	static $fromRelease = '3.6.6';
 	
 	/**
 	 * @var string
 	 */
-	static $toRelease = '3.6.6';
+	static $toRelease = '3.6.7';
 	
 	/**
 	 * @var string[]
@@ -27,7 +27,7 @@ class c_ChangeMigrationScript
 		"initPojectGenericFiles",
 		"buildProject",
 		
-		"website 0369", // Set "modules/website/useBeanPopulateStrictMode" project configuration value to "false" on existing projects.
+		"inxmail 0360", // Add new XML feed action on animations.
 		
 		"clearAll",
 		"compileAll",
