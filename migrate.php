@@ -3,9 +3,9 @@ class c_ChangeMigrationScript
 {
 	const REMOTE_REPOSITORY = 'http://update.rbschange.fr';
 	
-	static $fromRelease = '3.5.10';
+	static $fromRelease = '3.5.11';
 	
-	static $toRelease = '3.5.11';
+	static $toRelease = '3.5.12';
 	
 	static $patchs = array(
 		"lockApache",
