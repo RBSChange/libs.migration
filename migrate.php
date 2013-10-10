@@ -6,12 +6,12 @@ class c_ChangeMigrationScript
 	/**
 	 * @var string
 	 */
-	static $fromRelease = '3.6.6';
+	static $fromRelease = '3.6.7';
 	
 	/**
 	 * @var string
 	 */
-	static $toRelease = '3.6.7';
+	static $toRelease = '3.6.8';
 	
 	/**
 	 * @var string[]
@@ -27,7 +27,12 @@ class c_ChangeMigrationScript
 		"initPojectGenericFiles",
 		"buildProject",
 		
-		"inxmail 0360", // Add new XML feed action on animations.
+		"catalog 0385", // Add shippingWeight property on product in order to allow weight calculation on cart, packet...
+		"event 0360", // FIX #79643] Tri par date des actualités et événements (complément du commit précédent)
+		"shipping 0360", // Import dynamic list modules_shipping/modes.
+		"kiala 0360", // Add a smart folder to module order for KIALA shipping
+		"kiala 0361", // Add properties to kialamode : - fromCountry - isWeightRequired - packnshiptype
+		"kiala 0362", // Remove property dspid from mode and recreate the existing one as a kialadspid document
 		
 		"clearAll",
 		"compileAll",
